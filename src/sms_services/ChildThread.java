@@ -63,7 +63,7 @@ public class ChildThread extends Thread {
 
                 try {
                     con = (Connection) c.getConnection();
-                    String query = "SELECT number, keyword FROM subscribers WHERE status = 1 AND number LIKE '%88019%' AND number LIKE '%88014%';";
+                    String query = "SELECT number, keyword FROM subscribers WHERE status = 1 AND number LIKE '%88019%';";
                     Statement stmt = (Statement) con.createStatement();
                     ResultSet rs = stmt.executeQuery(query);
                     
