@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 /**
  *
  * @author Admin
@@ -76,6 +77,8 @@ public class ChildThread extends Thread {
                         } catch (Exception e) {
                             System.out.println("Exception: " + e);
                         }
+                        //Wait 10 second for each Hit
+                         Thread.sleep(10000); 
                     }
                     
                 } catch (Exception e) {
@@ -89,33 +92,53 @@ public class ChildThread extends Thread {
         System.out.println("SMS OF KEYWORD " + key + " SENT. " + countSMS + "\n");
     }
 
-    void sendMsg(String msisdn, String keyword) throws MalformedURLException, IOException {
-    String url = "http://103.228.39.36/BLSDP/subscription_renewal_ph1.php";
+    void sendMsg(String msisdn, String keyword) throws MalformedURLException, IOException, SQLException {
+        String url = "http://103.228.39.36/BLSDP/subscription_renewal_ph1.php";
+        String encodeKeyword = URLEncoder.encode(keyword, "UTF-8");
 
-    String encodeKeyword = URLEncoder.encode(keyword, "UTF-8");
+        data = "msisdn=" + msisdn + "&keyword=" + encodeKeyword;
+        String all = url + '?' + data;
 
-    data = "msisdn=" + msisdn + "&keyword=" + encodeKeyword;
-    String all = url + '?' + data;
+        // Send HTTP request
+        URL requestUrl = new URL(all);
+        URLConnection connection = requestUrl.openConnection();
+        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        String inputLine;
 
-    // Send HTTP request
-    URL requestUrl = new URL(all);
-    URLConnection connection = requestUrl.openConnection();
-    BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-    String inputLine;
-    
-    while ((inputLine = in.readLine()) != null) {
-        System.out.println("Response: " + inputLine);
+        while ((inputLine = in.readLine()) != null) {
+            System.out.println("Response: " + inputLine);
+        }
+        in.close();
+        System.out.println("Sent message with URL: " + all);
+
+        // Insert into sms_outbox table
+        try {
+            String smsQuery = "SELECT sms FROM sms WHERE keyword = ?";
+            PreparedStatement smsStmt = (PreparedStatement) con.prepareStatement(smsQuery);
+            smsStmt.setString(1, keyword);
+            ResultSet smsRs = smsStmt.executeQuery();
+
+            if (smsRs.next()) {
+                String sms = smsRs.getString("sms");
+
+                String insertQuery = "INSERT INTO sms_outbox (msisdn, keyword, sms, created_at, updated_at) VALUES (?, ?, ?, ?, ?)";
+                PreparedStatement insertStmt = (PreparedStatement) con.prepareStatement(insertQuery);
+                insertStmt.setString(1, msisdn);
+                insertStmt.setString(2, keyword);
+                insertStmt.setString(3, sms);
+                insertStmt.setString(4, currentTime);
+                insertStmt.setString(5, currentTime);
+                insertStmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Exception while inserting into sms_outbox: " + e);
+        }
     }
-    in.close();
-    System.out.println("Sent message with URL: " + all);
-    }
-
-
-
 
     public static String getCurrentTime(String dateFormat) {
         Calendar cal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
         return sdf.format(cal.getTime());
     }
-   }
+}

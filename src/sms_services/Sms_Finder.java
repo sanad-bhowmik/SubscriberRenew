@@ -40,7 +40,7 @@ public class Sms_Finder extends Thread {
             }            
             System.out.println("\n"+"Running.......");
             try {
-                Thread.sleep(10000);
+                Thread.sleep(60000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(Sms_Finder.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -61,7 +61,7 @@ public class Sms_Finder extends Thread {
        try {
             
 
-                if (currentTimetemp.matches("10:27:00")) {
+                if (currentTimetemp.matches("10:36:00")) {
                     ct = new ChildThread();
                     ct.start();
                     System.out.println( key + "started");
