@@ -1,5 +1,4 @@
-# SubscriberRenew_Java
-
+# SubscriberRenew
 ## Features
 
 - **User Interface:** Simple UI with two buttons:
